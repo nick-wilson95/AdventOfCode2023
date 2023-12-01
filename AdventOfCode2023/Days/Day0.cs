@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace AdventOfCode2023.Solutions;
+﻿namespace AdventOfCode2023.Solutions;
 
 public record Day0 : Day<Day0>, IDay<Day0>
 {
