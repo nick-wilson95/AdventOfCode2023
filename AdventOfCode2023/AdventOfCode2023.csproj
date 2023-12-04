@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Input\" />
+    <PackageReference Include="morelinq" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>

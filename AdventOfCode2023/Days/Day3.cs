@@ -88,7 +88,7 @@ public record Day3 : Day<Day3>, IDay<Day3>
             }
         }
 
-        var gearNumbers = new Dictionary<(int i, int j), List<int>>();
+        Dictionary<(int i, int j), List<int>> gearNumbers = [];
         ForEachNumber(input, (position, digits, value) =>
         {
             foreach (var (i, j) in GetAdjacentGears(position.i, position.j - digits.Length, digits.Length))

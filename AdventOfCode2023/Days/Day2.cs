@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode2023.Solutions;
+﻿using MoreLinq;
+
+namespace AdventOfCode2023.Solutions;
 
 public record Day2 : Day<Day2>, IDay<Day2>
 {
@@ -15,12 +17,11 @@ public record Day2 : Day<Day2>, IDay<Day2>
             .Select(_ => _.Trim().Split(' '))
             .ToDictionary(_ => _[1], _ => int.Parse(_[0]));
 
-        var parts = line.Split(':');
-
-        return new(
-            Id: int.Parse(parts[0][5..]),
-            Rounds: parts[1].Split(';').Select(ParseRound).ToArray()
-        );
+        return line.Split(':')
+            .Fold((a, b) => new Game(
+                Id: int.Parse(a[5..]),
+                Rounds: b.Split(';').Select(ParseRound).ToArray()
+            ));
     }
 
     public static bool Valid(Game game) =>
