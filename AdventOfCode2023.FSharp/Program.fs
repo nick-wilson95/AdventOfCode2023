@@ -1,0 +1,1 @@
+﻿printfn "%d" (Day2.solvePart2())
