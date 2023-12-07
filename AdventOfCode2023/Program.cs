@@ -1,1 +1,1 @@
-﻿Console.WriteLine(Day6.Solve());
+﻿Console.WriteLine(Day7.Solve());
