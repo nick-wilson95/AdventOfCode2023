@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using MapEntry = (long Destination, long Source, long Length);
+﻿using MapEntry = (long Destination, long Source, long Length);
 
 namespace AdventOfCode2023.Solutions;
 

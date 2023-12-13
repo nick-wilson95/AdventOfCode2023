@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using static System.StringSplitOptions;
+﻿using static System.StringSplitOptions;
 
 namespace AdventOfCode2023.Solutions;
 

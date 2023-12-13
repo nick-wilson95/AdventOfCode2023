@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using Node = (string Left, string Right);
 
 namespace AdventOfCode2023.Solutions;

@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace AdventOfCode2023.Solutions;
 

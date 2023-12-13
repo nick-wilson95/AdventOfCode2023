@@ -1,6 +1,4 @@
-﻿using MoreLinq;
-
-namespace AdventOfCode2023.Solutions;
+﻿namespace AdventOfCode2023.Solutions;
 
 public record Day12 : Day<Day12>, IDay<Day12>
 {

@@ -1,5 +1,4 @@
-﻿using MoreLinq;
-using Coord = (long Row, long Col);
+﻿using Coord = (long Row, long Col);
 
 namespace AdventOfCode2023.Solutions;
 
