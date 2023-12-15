@@ -17,11 +17,9 @@ public record Day1 : Day<Day1>, IDay<Day1>
         ["nine"] = 9 
     };
 
-    private static int? ToInt(char c) => int.TryParse(c.ToString(), out var result) ? result : null;
-
     public static object SolvePart1(ImmutableArray<string> input) =>
-        10 * input.Sum(_ => _.Select(ToInt).First(_ => _ is not null))!
-        + input.Sum(_ => _.Reverse().Select(ToInt).First(_ => _ is not null))!;
+        10 * input.Sum(_ => _.Select(_ => _.ParseDigit()).First(_ => _ is not null))!
+        + input.Sum(_ => _.Reverse().Select(_ => _.ParseDigit()).First(_ => _ is not null))!;
 
     public static object SolvePart2(ImmutableArray<string> input)
     {
