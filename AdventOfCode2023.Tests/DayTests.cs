@@ -39,6 +39,8 @@ public class DayTests
 
     [Fact] public void Day16() => TestDay<Day16>(new(7074, 7530));
 
+    [Fact] public void Day17() => TestDay<Day17>(new(1039, 1201));
+
     private static void TestDay<T>(Solution expected) where T : Day<T>, IDay<T>
         => Assert.Equal(expected, Day<T>.Solve());
 }
