@@ -1,4 +1,5 @@
-﻿namespace AdventOfCode2023.Solutions;
+﻿
+namespace AdventOfCode2023.Solutions;
 
 public record Day24 : Day<Day24>, IDay<Day24>
 {
@@ -64,89 +65,112 @@ public record Day24 : Day<Day24>, IDay<Day24>
         return colllisions;
     }
 
+    // Assumptions:
+    //  No velocity has a prime factor > 907
+    //  Stone direction vector components are <= than 500
+    //  Stone direction components dont have any repeat prime factors (performance work needed to scan more prime combinations)
+    // Note:
+    //  I copied the LinearEquationSolver used in this solution from the internet for expediency
     public static object SolvePart2(ImmutableArray<string> input)
     {
         var hailstones = input.Select(Hailstone.Parse).ToList();
 
-        var variantX = GetVariantPrimes(hailstones, _ => _.X);
-        var variantY = GetVariantPrimes(hailstones, _ => _.Y);
-        var variantZ = GetVariantPrimes(hailstones, _ => _.Z);
+        var (h0CollisionTime, stoneDirection) = GetStoneDirection(hailstones);
 
-        // Variants can't be prime factors of direction of travel components
+        var pointOfContact = hailstones[0].PositionAt((long)h0CollisionTime);
 
-        List<(bool works, double h1Time, Vector direction)> results = [];
-        void Test(int a, int b, int c)
-        {
-            results.AddRange([
-                TestLine(hailstones, new(a * 1, b * 1, c * 1)),
-                TestLine(hailstones, new(a * -1, b * 1, c * 1)),
-                TestLine(hailstones, new(a * 1, b * -1, c * 1)),
-                TestLine(hailstones, new(a * 1, b * 1, c * -1)),
-                TestLine(hailstones, new(a * 3, b * 2, c * 1)),
-                TestLine(hailstones, new(a * -3, b * 2, c * 1)),
-                TestLine(hailstones, new(a * 3, b * -2, c * 1)),
-                TestLine(hailstones, new(a * 3, b * 2, c * -1)),
-                TestLine(hailstones, new(a * 3, b * 4, c * 1)),
-                TestLine(hailstones, new(a * -3, b * 4, c * 1)),
-                TestLine(hailstones, new(a * 3, b * -4, c * 1)),
-                TestLine(hailstones, new(a * 3, b * 4, c * -1)),
-                TestLine(hailstones, new(a * 3, b * 8, c * 1)),
-                TestLine(hailstones, new(a * -3, b * 8, c * 1)),
-                TestLine(hailstones, new(a * 3, b * -8, c * 1)),
-                TestLine(hailstones, new(a * 3, b * 8, c * -1)),
-                TestLine(hailstones, new(a * 9, b * 2, c * 1)),
-                TestLine(hailstones, new(a * -9, b * 2, c * 1)),
-                TestLine(hailstones, new(a * 9, b * -2, c * 1)),
-                TestLine(hailstones, new(a * 9, b * 2, c * -1)),
-                TestLine(hailstones, new(a * 9, b * 4, c * 1)),
-                TestLine(hailstones, new(a * -9, b * 4, c * 1)),
-                TestLine(hailstones, new(a * 9, b * -4, c * 1)),
-                TestLine(hailstones, new(a * 9, b * 4, c * -1)),
-                TestLine(hailstones, new(a * 9, b * 8, c * 1)),
-                TestLine(hailstones, new(a * -9, b * 8, c * 1)),
-                TestLine(hailstones, new(a * 9, b * -8, c * 1))
-            ]);
-        }
-
-        Test(1, 1, 1);
-        Test(67, 1, 1);
-        Test(1, 101, 1);
-        Test(1, 1, 79);
-        Test(67, 101, 1);
-        Test(67, 1, 79);
-        Test(1, 101, 79);
-        Test(67, 101, 79);
-
-        var (_, h1Time, direction) = results.Single(_ => _.works);
-
-        var pointOfContact = hailstones[0].PositionAt((long)h1Time);
-
-        return pointOfContact.X - h1Time * direction.X
-            + (pointOfContact.Y - h1Time * direction.Y)
-            + (pointOfContact.Z - h1Time * direction.Z);
+        return pointOfContact.X - h0CollisionTime * stoneDirection.X
+            + (pointOfContact.Y - h0CollisionTime * stoneDirection.Y)
+            + (pointOfContact.Z - h0CollisionTime * stoneDirection.Z);
     }
 
-    private static (bool works, double h1Time, Vector direction) TestLine(List<Hailstone> hailstones, Vector direction)
+    private static (double h0CollisionTime, Vector velocity) GetStoneDirection(List<Hailstone> hailstones)
     {
-        static double GetH1Time(Hailstone h1, Hailstone h2, Vector direction)
+        // Given prime p:
+        //  If there exist hailstones G, H such that:
+        //      (G.xt | p) and (H.xt | p) are constant in t and not equal (where xt is x position at time t)
+        //  Then stone.velocity.x cannot have p as a prime factor
+        // Reflected statements hold for y and z components
+
+        var invariantX = GetInvariantPrimes(hailstones, _ => _.X);
+        var invariantY = GetInvariantPrimes(hailstones, _ => _.Y);
+        var invariantZ = GetInvariantPrimes(hailstones, _ => _.Z);
+
+        var tryX = GetValuesByPrimes(invariantX).ToArray();
+        var tryY = GetValuesByPrimes(invariantY).ToArray();
+        var tryZ = GetValuesByPrimes(invariantZ).ToArray();
+
+        foreach (var x in tryX)
         {
-            var result = SolveLinearEquations([
-                [h1.Velocity.X, direction.X, -h2.Velocity.X, h2.Position.X - h1.Position.X],
-                [h1.Velocity.Y, direction.Y, -h2.Velocity.Y, h2.Position.Y - h1.Position.Y],
-                [h1.Velocity.Z, direction.Z, -h2.Velocity.Z, h2.Position.Z - h1.Position.Z]
+            foreach (var y in tryY)
+            {
+                foreach (var z in tryZ)
+                {
+
+                    var tests = new[]
+                    {
+                        TestVelocity(hailstones, new( x,  y,  z)),
+                        TestVelocity(hailstones, new(-x,  y,  z)),
+                        TestVelocity(hailstones, new( x, -y,  z)),
+                        TestVelocity(hailstones, new( x,  y, -z)),
+                    };
+
+                    if (tests.Any(_ => _.works))
+                    {
+                        var result = tests.Single(_ => _.works);
+                        return (result.h0CollisionTime, result.direction);
+                    }
+                }
+            }
+        }
+
+        throw new Exception("Failed to find direction");
+    }
+
+    private static IEnumerable<int> GetValuesByPrimes(int[] primes)
+    {
+        const int Limit = 500;
+
+        var primeCounts = Math.Pow(2, primes.Length);
+        for (var i = 0; i < primeCounts; i++)
+        {
+            double value = 1;
+            var current = i;
+            for (var j = 0; j < primes.Length; j++)
+            {
+                if (current is 0) break;
+                value *= Math.Pow(primes[j], current % 2);
+                if (value > Limit) break;
+                current /= 2;
+            }
+
+            if (value > Limit) continue;
+
+            yield return (int)value;
+        }
+    }
+
+    private static (bool works, double h0CollisionTime, Vector direction) TestVelocity(List<Hailstone> hailstones, Vector velocity)
+    {
+        static double GetH0CollisionTime(Hailstone h0, Hailstone h1, Vector direction)
+        {
+            var result = LinearEquationSolver.Solve([
+                [h0.Velocity.X, direction.X, -h1.Velocity.X, h1.Position.X - h0.Position.X],
+                [h0.Velocity.Y, direction.Y, -h1.Velocity.Y, h1.Position.Y - h0.Position.Y],
+                [h0.Velocity.Z, direction.Z, -h1.Velocity.Z, h1.Position.Z - h0.Position.Z]
             ]);
 
             return result[0];
         }
 
-        var time1 = GetH1Time(hailstones[0], hailstones[1], direction);
-        var time2 = GetH1Time(hailstones[0], hailstones[2], direction);
+        var time1 = GetH0CollisionTime(hailstones[0], hailstones[1], velocity);
+        var time2 = GetH0CollisionTime(hailstones[0], hailstones[2], velocity);
 
-        return (time1 == time2, time1, direction);
+        return (time1 == time2, time1, velocity);
     }
 
 
-    private static int[] GetVariantPrimes(List<Hailstone> hailstones, Func<Vector, double> GetValue)
+    private static int[] GetInvariantPrimes(List<Hailstone> hailstones, Func<Vector, double> GetValue)
     {
         var primes = hailstones.SelectMany(_ => GetPrimeFactors((long)GetValue(_.Velocity)).Select(p => (v: GetValue(_.Position) % p, p)))
             .GroupBy(_ => _.p)
@@ -181,94 +205,5 @@ public record Day24 : Day<Day24>, IDay<Day24>
             }
         }
         return result;
-    }
-
-    private static double[] SolveLinearEquations(double[][] rows)
-    {
-
-        int length = rows[0].Length;
-
-        for (int i = 0; i < rows.Length - 1; i++)
-        {
-            if (rows[i][i] == 0 && !Swap(rows, i, i))
-            {
-                return null;
-            }
-
-            for (int j = i; j < rows.Length; j++)
-            {
-                double[] d = new double[length];
-                for (int x = 0; x < length; x++)
-                {
-                    d[x] = rows[j][x];
-                    if (rows[j][i] != 0)
-                    {
-                        d[x] = d[x] / rows[j][i];
-                    }
-                }
-                rows[j] = d;
-            }
-
-            for (int y = i + 1; y < rows.Length; y++)
-            {
-                double[] f = new double[length];
-                for (int g = 0; g < length; g++)
-                {
-                    f[g] = rows[y][g];
-                    if (rows[y][i] != 0)
-                    {
-                        f[g] = f[g] - rows[i][g];
-                    }
-
-                }
-                rows[y] = f;
-            }
-        }
-
-        return CalculateResult(rows);
-    }
-
-    private static bool Swap(double[][] rows, int row, int column)
-    {
-        bool swapped = false;
-        for (int z = rows.Length - 1; z > row; z--)
-        {
-            if (rows[z][row] != 0)
-            {
-                double[] temp = new double[rows[0].Length];
-                temp = rows[z];
-                rows[z] = rows[column];
-                rows[column] = temp;
-                swapped = true;
-            }
-        }
-
-        return swapped;
-    }
-    private static double[] CalculateResult(double[][] rows)
-    {
-        double val = 0;
-        int length = rows[0].Length;
-        double[] result = new double[rows.Length];
-        for (int i = rows.Length - 1; i >= 0; i--)
-        {
-            val = rows[i][length - 1];
-            for (int x = length - 2; x > i - 1; x--)
-            {
-                val -= rows[i][x] * result[x];
-            }
-            result[i] = val / rows[i][i];
-
-            if (!IsValidResult(result[i]))
-            {
-                return null;
-            }
-        }
-        return result;
-    }
-
-    private static bool IsValidResult(double result)
-    {
-        return !(double.IsNaN(result) || double.IsInfinity(result));
-    }
+    }    
 }

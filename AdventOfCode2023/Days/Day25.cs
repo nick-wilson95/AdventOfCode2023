@@ -67,13 +67,13 @@ public record Day25 : Day<Day25>, IDay<Day25>
             return true;
         }
 
-        for (var i = 1; i < nodes.Length; i++)
+        Parallel.ForEach(nodes, node =>
         {
-            if (Has4DistinctPaths(nodes[i]))
+            if (Has4DistinctPaths(node))
             {
-                groupA.Add(nodes[i]);
+                groupA.Add(node);
             }
-        }
+        });
 
         return groupA.Count * (nodes.Length - groupA.Count);
     }
